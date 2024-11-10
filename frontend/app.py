@@ -1,15 +1,6 @@
-# frontend/app.py
 
 # import streamlit as st
 # import requests
-# import sys
-# from pathlib import Path
-
-# # Add the src directory to sys.path to enable absolute imports
-# sys.path.append(str(Path(__file__).resolve().parent.parent / "src"))
-
-# # Now you can import recommend_models from recommender.py in src
-# from recommender import recommend_models
 
 # st.title("Model Recommender")
 # st.write("Enter a prompt to get model recommendations based on your task.")
@@ -29,11 +20,11 @@
             
 #             if response.status_code == 200:
 #                 recommendations = response.json()
-#                 st.write("Recommended Models:")
+#                 st.write("### Recommended Models:")
 #                 for rec in recommendations:
 #                     st.write(f"**Model ID:** {rec['model_id']}")
+#                     st.write(f"**Similarity Score:** {rec['similarity']:.4f}")
 #                     st.write(f"**Description:** {rec['description']}")
-#                     st.write(f"**Tags:** {rec['tags']}")
 #                     st.write("---")
 #             else:
 #                 st.error("Failed to retrieve recommendations. Please try again.")
@@ -66,9 +57,13 @@ if st.button("Get Recommendations"):
                 recommendations = response.json()
                 st.write("### Recommended Models:")
                 for rec in recommendations:
-                    st.write(f"**Model ID:** {rec['model_id']}")
-                    st.write(f"**Similarity Score:** {rec['similarity']:.4f}")
-                    st.write(f"**Description:** {rec['description']}")
+                    st.write(f"**Model ID:** {rec.get('model_id', 'N/A')}")
+                    st.write(f"**Model Name:** {rec.get('model_name', 'N/A')}")
+                    st.write(f"**Description:** {rec.get('description', 'N/A')}")
+                    st.write(f"**Tags:** {rec.get('tags', 'N/A')}")
+                    st.write(f"**Model Downloads:** {rec.get('downloads', 'N/A')}")
+                    st.write(f"**Likes:** {rec.get('likes', 'N/A')}")
+                    st.write(f"**Similarity Score:** {rec.get('similarity', 'N/A'):.4f}")
                     st.write("---")
             else:
                 st.error("Failed to retrieve recommendations. Please try again.")

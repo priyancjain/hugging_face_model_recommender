@@ -99,43 +99,93 @@
 #     ]
     
 #     return recommendations
+# import joblib
+# from sklearn.metrics.pairwise import cosine_similarity
+
+# def recommend_models(user_prompt):
+#     # Load vectorizer, model matrix, and model data
+#     vectorizer = joblib.load("data/vectorizer.joblib")
+#     model_matrix = joblib.load("data/model_matrix.joblib")
+#     model_data = joblib.load("data/models_data.joblib")  # List of dictionaries with model info
+    
+#     # Transform the user prompt using the fitted vectorizer
+#     prompt_vector = vectorizer.transform([user_prompt])
+    
+#     # Compute cosine similarity between the prompt and model descriptions
+#     similarities = cosine_similarity(prompt_vector, model_matrix).flatten()
+    
+#     # Get indices of the most similar models
+#     top_indices = similarities.argsort()[-5:][::-1]  # Top 5 recommendations, descending order
+
+#     # Include full model information for each recommendation
+#     # recommendations = [
+#     #     {
+#     #         "similarity": float(similarities[i]),  # Ensure compatibility with JSON serialization
+#     #         **model_data[i]  # Unpack all model details for the selected model
+#     #     }
+#     #     for i in top_indices
+#     # ]
+#     recommendations = [
+#     {
+#         "model_id": int(i),
+#         "similarity": float(similarities[i]),
+#         "model_name": model_data[i].get("model_id", "Unknown Model"),
+#         "description": model_data[i].get("description", "No description available"),
+#         "tags": model_data[i].get("tags", "No tags available"),
+#         "downloads": model_data[i].get("downloads", "N/A"),
+#         "likes": model_data[i].get("likes", "N/A")
+#     }
+#     for i in top_indices
+# ]
+
+#     return recommendations
 import joblib
+import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
+
+def clean_data(data):
+    """
+    Recursively clean the data to replace NaN, inf, or -inf with valid values.
+    """
+    if isinstance(data, dict):
+        return {k: clean_data(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [clean_data(item) for item in data]
+    elif isinstance(data, float):
+        if np.isnan(data) or np.isinf(data):
+            return None  # Replace invalid float values with None
+    return data
+
+
 def recommend_models(user_prompt):
-    # Load vectorizer, model matrix, and model data
+    # Load the vectorizer and model data
     vectorizer = joblib.load("data/vectorizer.joblib")
     model_matrix = joblib.load("data/model_matrix.joblib")
-    model_data = joblib.load("data/models_data.joblib")  # List of dictionaries with model info
-    
-    # Transform the user prompt using the fitted vectorizer
+    model_data = joblib.load("data/models_data.joblib")  # List of dictionaries with model details
+
+    # Transform the user prompt using the vectorizer
     prompt_vector = vectorizer.transform([user_prompt])
-    
-    # Compute cosine similarity between the prompt and model descriptions
+
+    # Compute cosine similarity between the prompt vector and the model matrix
     similarities = cosine_similarity(prompt_vector, model_matrix).flatten()
-    
-    # Get indices of the most similar models
-    top_indices = similarities.argsort()[-5:][::-1]  # Top 5 recommendations, descending order
 
-    # Include full model information for each recommendation
-    # recommendations = [
-    #     {
-    #         "similarity": float(similarities[i]),  # Ensure compatibility with JSON serialization
-    #         **model_data[i]  # Unpack all model details for the selected model
-    #     }
-    #     for i in top_indices
-    # ]
+    # Get the indices of the top 5 most similar models
+    top_indices = similarities.argsort()[-5:][::-1]
+
+    # Prepare the recommendation data
     recommendations = [
-    {
-        "model_id": int(i),
-        "similarity": float(similarities[i]),
-        "model_name": model_data[i].get("model_id", "Unknown Model"),
-        "description": model_data[i].get("description", "No description available"),
-        "tags": model_data[i].get("tags", "No tags available"),
-        "downloads": model_data[i].get("downloads", "N/A"),
-        "likes": model_data[i].get("likes", "N/A")
-    }
-    for i in top_indices
-]
+        {
+             "model_id": int(i),
+            "similarity": float(similarities[i]),
+            "model_name": model_data[i].get("model_id", "Unknown Model"),
+            "description": model_data[i].get("description", "No description available"),
+            "tags": model_data[i].get("tags", "No tags available"),
+            "downloads": model_data[i].get("downloads", "N/A"),
+            "likes": model_data[i].get("likes", "N/A")
+        }
+        for i in top_indices
+    ]
 
-    return recommendations
+    # Clean the recommendation data
+    return clean_data(recommendations)
